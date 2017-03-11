@@ -11,8 +11,6 @@ defmodule Chatme.Server.Listener do
 
   require Logger
 
-  @default_opts [ip: {127, 0, 0, 1}, port: 8080]
-
   @type state :: %{ip: :inet.ip_address,
                    port: :inet.port_number,
                    socket: :gen_tcp.socket}
@@ -22,16 +20,15 @@ defmodule Chatme.Server.Listener do
   @doc """
   Starts listener process
   """
-  def start_link(opts \\ @default_opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link(config) do
+    GenServer.start_link(__MODULE__, config, name: __MODULE__)
   end
 
   ## GenServer callbacks
 
-  def init(opts) do
-    opts = merge_with_defaults(opts)
-    ip = opts[:ip]
-    port = opts[:port]
+  def init(config) do
+    ip = config[:ip]
+    port = config[:port]
     case init_socket(ip, port) do
       {:ok, socket} ->
         state = %{ip: ip, port: port, socket: socket}
@@ -40,8 +37,7 @@ defmodule Chatme.Server.Listener do
         accept()
         {:ok, state}
       {:error, reason} ->
-        Logger.error ["[Listener] Couldn't initialize listening socket: ",
-                      inspect(reason)]
+        Logger.error "Couldn't initialize listening socket: " <> inspect(reason)
         {:stop, reason}
     end
   end
@@ -53,10 +49,6 @@ defmodule Chatme.Server.Listener do
   end
 
   ## Internal functions
-
-  defp merge_with_defaults(opts) do
-    Keyword.merge(@default_opts, opts)
-  end
 
   defp init_socket(ip, port) do
     :gen_tcp.listen(port, [:binary, ip: ip, active: true])

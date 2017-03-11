@@ -54,7 +54,7 @@ defmodule Chatme.Server.Conn do
     {:stop, reason, state}
   end
   def handle_info({:tcp_closed, socket}, %{socket: socket} = state) do
-    Logger.error "Connection closed"
+    Logger.info "Connection closed"
     {:stop, :normal, state}
   end
   def handle_info({:peer_data, data}, %{socket: socket} = state) do

@@ -7,6 +7,7 @@ defmodule Chatme.Server.Mixfile do
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     escript: escript(),
      deps: deps()]
   end
 
@@ -17,5 +18,11 @@ defmodule Chatme.Server.Mixfile do
 
   defp deps do
     []
+  end
+
+  defp escript do
+    [main_module: Chatme.Server.Main,
+     app: nil,
+     path: "dist/server"]
   end
 end

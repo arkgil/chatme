@@ -85,9 +85,7 @@ defmodule Chatme.Client.Conn do
   end
 
   defp print(data) do
-    data
-    |> String.trim_trailing("\n")
-    |> IO.puts()
+    IO.puts data
   end
 
   defp send_message(data, %{socket: socket, name: name}) do

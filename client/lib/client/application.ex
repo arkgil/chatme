@@ -9,7 +9,8 @@ defmodule Chatme.Client.Application do
     children = [
     ]
 
-    opts = [strategy: :one_for_one, name: Chatme.Client.Supervisor]
+    opts = [strategy: :one_for_one, name: Chatme.Client.Supervisor,
+            max_restarts: 0]
     Supervisor.start_link(children, opts)
   end
 end

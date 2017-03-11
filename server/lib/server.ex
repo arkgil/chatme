@@ -7,7 +7,7 @@ defmodule Chatme.Server do
   def start(options) do
     Application.load(:server)
     configure(options)
-    {:ok, _} = Application.ensure_all_started(:server)
+    {:ok, _} = Application.ensure_all_started(:server, :permanent)
   end
 
   defp configure(options) do

@@ -142,13 +142,26 @@ defmodule Chatme.Client.Main do
   end
 
   defp input_loop do
-    message = IO.gets(@prompt) |> to_string()
+    message = handle_input()
     if not empty?(message) do
       message
       |> String.trim()
       |> send()
     end
     input_loop()
+  end
+
+  defp handle_input do
+    case IO.gets(@prompt) do
+      {:error, _} ->
+        IO.puts "Bye!"
+        halt(0)
+      :eof ->
+        IO.puts "Bye!"
+        halt(0)
+      input ->
+        input
+    end
   end
 
   defp empty?(message) do

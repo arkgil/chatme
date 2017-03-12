@@ -79,7 +79,7 @@ defmodule Chatme.Client.Media do
   ## Internal functions
 
   defp init_socket(port) do
-    :gen_udp.open(port)
+    :gen_udp.open(port, [:binary, active: true])
   end
 
   defp print(media) do

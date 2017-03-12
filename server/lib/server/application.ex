@@ -10,9 +10,10 @@ defmodule Chatme.Server.Application do
     set_log_level(config)
 
     children = [
-      worker(Chatme.Server.Listener, [config]),
       supervisor(Chatme.Server.ConnSup, []),
       supervisor(Chatme.Server.ConnRegistry, []),
+      worker(Chatme.Server.Media, [config]),
+      worker(Chatme.Server.Listener, [config])
     ]
 
     opts = [strategy: :one_for_one, name: Chatme.Server.Supervisor]

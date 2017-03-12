@@ -3,16 +3,18 @@ defmodule Chatme.Client.Main do
 
   alias Chatme.Client
 
-  @prompt "> "
   @defaults [server_ip: "127.0.0.1", server_port: 33_333, help: false]
   @help """
-  Usage: server --name <name> [--server-port <port>] [--server-ip <ip>] [--help]
+  Usage: server --name <name> --media <path> [--server-port <port>]
+         [--server-ip <ip>] [--help]
 
+    -n, --name          User's nickname
+    -m, --media         Path to file with ASCII art to be sent as media
     -p, --server-port   Chat server port number
     -i, --server-ip     Chat server IP address
-    -n, --name          User's nickname
     -h, --help          Display this help message
   """
+  @prompt "> "
 
   def main(args) do
     options = prepare_options(args)
@@ -31,13 +33,15 @@ defmodule Chatme.Client.Main do
     |> merge_with_defaults()
     |> translate_options()
     |> ensure_name_present()
+    |> ensure_media_present()
   end
 
   defp parse_args(args) do
     {options, _, _} = OptionParser.parse(args,
       switches: [server_port: :integer, server_ip: :string,
-                 help: :boolean, name: :string],
-      aliases: [p: :server_port, i: :server_ip, h: :help, n: :name])
+                 help: :boolean, name: :string, media: :string],
+      aliases: [p: :server_port, i: :server_ip, h: :help, n: :name,
+                m: :media])
     options
   end
 
@@ -68,6 +72,13 @@ defmodule Chatme.Client.Main do
   defp validate_option({:help, _}), do: false
   defp validate_option({:name, val}) when is_binary(val), do: true
   defp validate_option({:name, _}), do: false
+  defp validate_option({:media, path}) when is_binary(path) do
+    if File.regular?(path) do
+      true
+    else
+      IO.puts "error: #{path} is not a regular file"
+    end
+  end
 
   defp merge_with_defaults(options) do
     @defaults |> Keyword.merge(options)
@@ -81,6 +92,10 @@ defmodule Chatme.Client.Main do
     {:ok, ip} = val |> to_charlist() |> :inet.parse_address()
     {:server_ip, ip}
   end
+  defp translate_option({:media, path}) do
+    media = File.read!(path)
+    {:media, media}
+  end
   defp translate_option(kv), do: kv
 
   defp ensure_name_present(options) do
@@ -92,28 +107,35 @@ defmodule Chatme.Client.Main do
     end
   end
 
+  defp ensure_media_present(options) do
+    if is_binary(options[:media]) do
+      options
+    else
+      IO.puts "error: --media option is required"
+      halt(1)
+    end
+  end
+
   defp start_client(options) do
     case Client.start(options) do
-      {:ok, pid} ->
-        monitor_client(pid)
+      :ok ->
+        monitor_client()
       {:error, _} ->
         halt(1)
     end
   end
 
-  defp monitor_client(pid) do
+  defp monitor_client do
     spawn fn ->
-      ref = Process.monitor(pid)
+      ref = Process.monitor(Chatme.Client.Supervisor)
       monitor_loop(ref)
     end
   end
 
   defp monitor_loop(ref) do
     receive do
-      {:DOWN, ^ref, _, _, :normal} ->
-        halt(0)
       {:DOWN, ^ref, _, _, _} ->
-        halt(1)
+        halt(0)
       _ ->
         monitor_loop(ref)
     end
@@ -124,7 +146,7 @@ defmodule Chatme.Client.Main do
     if not empty?(message) do
       message
       |> String.trim()
-      |> Client.send()
+      |> send()
     end
     input_loop()
   end
@@ -136,5 +158,12 @@ defmodule Chatme.Client.Main do
   defp halt(code) do
     :init.stop(code)
     Process.sleep(:infinity)
+  end
+
+  defp send(message) do
+    case message do
+      "M" -> Client.send_media()
+      _ -> Client.send(message)
+    end
   end
 end

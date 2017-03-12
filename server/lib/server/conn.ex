@@ -13,7 +13,9 @@ defmodule Chatme.Server.Conn do
 
   @type state :: %{socket: :gen_tcp.socket,
                    ip: :inet.ip_address,
-                   port: :inet.port_number}
+                   port: :inet.port_number,
+                   name: String.t,
+                   media_port: :inet.port_number}
 
   ## API
 
@@ -34,13 +36,11 @@ defmodule Chatme.Server.Conn do
   ## GenServer callbacks
 
   def init({socket, ip, port}) do
-    state = %{
-      socket: socket,
-      ip: ip,
-      port: port
-    }
-    ConnRegistry.register()
+    ConnRegistry.register(ip, port)
     Logger.metadata(tag: "[Conn][" <> format_ip_and_port(ip, port) <> "]")
+    state = %{socket: socket,
+              ip: ip,
+              port: port}
     {:ok, state}
   end
 
@@ -62,7 +62,8 @@ defmodule Chatme.Server.Conn do
       :ok ->
         {:noreply, state}
       {:error, reason} ->
-        Logger.error "Couldn't send data from peer to client: " <> inspect(reason)
+        Logger.error "Couldn't send data from peer to client: " <>
+          inspect(reason)
     end
   end
 

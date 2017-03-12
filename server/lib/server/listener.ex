@@ -27,17 +27,18 @@ defmodule Chatme.Server.Listener do
   ## GenServer callbacks
 
   def init(config) do
+    Logger.metadata tag: "[Listener]"
     ip = config[:ip]
     port = config[:port]
     case init_socket(ip, port) do
       {:ok, socket} ->
         state = %{ip: ip, port: port, socket: socket}
-        Logger.metadata(tag: "[Listener]")
         Logger.info "Started listening on " <> format_ip_and_port(ip, port)
         accept()
         {:ok, state}
       {:error, reason} ->
-        Logger.error "Couldn't initialize listening socket: " <> inspect(reason)
+        Logger.error "Couldn't initialize listening socket: " <>
+          inspect(reason)
         {:stop, reason}
     end
   end
@@ -51,7 +52,7 @@ defmodule Chatme.Server.Listener do
   ## Internal functions
 
   defp init_socket(ip, port) do
-    :gen_tcp.listen(port, [:binary, ip: ip, active: true])
+    :gen_tcp.listen(port, [:binary, ip: ip, active: false])
   end
 
   defp accept do

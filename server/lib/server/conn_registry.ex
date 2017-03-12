@@ -15,8 +15,8 @@ defmodule Chatme.Server.ConnRegistry do
   @doc """
   Registers connection in registry
   """
-  def register do
-    {:ok, _} = Registry.register(@registry, :conn, %{})
+  def register(ip, port) do
+    {:ok, _} = Registry.register(@registry, :conn, %{ip: ip, port: port})
   end
 
   @doc """
@@ -29,6 +29,18 @@ defmodule Chatme.Server.ConnRegistry do
       for {pid, value} <- entries, pid != sender do
         fun.(pid, value)
       end
+    end)
+  end
+
+  @doc """
+  Checks if there is established connection with given
+  IP and por
+  """
+  def conn_exists?(ip, port) do
+    @registry
+    |> Registry.lookup(:conn)
+    |> Enum.any?(fn {_, %{ip: ^ip, port: ^port}} -> true
+                    _ -> false
     end)
   end
 end

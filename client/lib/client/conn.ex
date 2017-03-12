@@ -13,7 +13,6 @@ defmodule Chatme.Client.Conn do
                    server_ip: :inet.ip_address,
                    server_port: :inet.port_number,
                    name: String.t}
-
   ## API
 
   @doc """
@@ -28,6 +27,13 @@ defmodule Chatme.Client.Conn do
 
   def start_link(config) do
     GenServer.start_link(__MODULE__, config, name: __MODULE__)
+  end
+
+  @doc """
+  Returns local port of connection
+  """
+  def get_port do
+    GenServer.call(__MODULE__, :get_port)
   end
 
   @doc """
@@ -58,6 +64,11 @@ defmodule Chatme.Client.Conn do
           format_ip_and_port(server_ip, server_port) <> ": #{inspect reason}"
         {:stop, reason}
     end
+  end
+
+  def handle_call(:get_port, _, %{socket: socket} = state) do
+    {:ok, port} = :inet.port(socket)
+    {:reply, port, state}
   end
 
   def handle_cast({:send, data}, state) do

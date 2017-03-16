@@ -52,7 +52,7 @@ defmodule Chatme.Server.Listener do
   ## Internal functions
 
   defp init_socket(ip, port) do
-    :gen_tcp.listen(port, [:binary, ip: ip, active: false])
+    :gen_tcp.listen(port, [:binary, ip: ip, active: true])
   end
 
   defp accept do
